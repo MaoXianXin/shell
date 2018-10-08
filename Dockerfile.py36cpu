@@ -1,7 +1,5 @@
-FROM nvidia/cuda:9.1-cudnn7-devel
+FROM ubuntu:16.04
 LABEL author="TinyMind" website="www.tinymind.com" email="hello@tinymind.com"
-
-ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
@@ -11,7 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         graphviz \
         g++ \
         libbz2-dev \
-        libcupti-dev \
         libffi-dev \
         libfreeimage-dev \
         libfreetype6-dev \
@@ -34,7 +31,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libzmq3-dev \
         llvm \
         make \
-        openjdk-8-jdk \
         pkg-config \
         python-pil \
         python-ply \
@@ -42,7 +38,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-dev \
         rsync \
         software-properties-common \
-        swig \
         tk-dev \
         unzip \
         vim \
@@ -54,10 +49,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # MKL support.
-RUN export CPUS=$(cat /proc/cpuinfo |grep processor |wc -l) && \
-    git clone https://github.com/01org/mkl-dnn.git && \
+RUN git clone https://github.com/01org/mkl-dnn.git && \
     cd mkl-dnn/scripts && ./prepare_mkl.sh && cd .. && \
-    mkdir -p build && cd build && cmake .. && make -j $CPUS && \
+    mkdir -p build && cd build && cmake .. && make && \
     make install
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
@@ -93,23 +87,6 @@ RUN conda install -y python=3.6.5 && \
         && \
     conda clean -yt && \
     python -m ipykernel.kernelspec
-
-# install bazel
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    zip \
-    g++ \
-    zlib1g-dev \
-    unzip \
-    python3 && \
-    wget https://github.com/bazelbuild/bazel/releases/download/0.10.0/bazel-0.10.0-without-jdk-installer-linux-x86_64.sh && \
-    chmod +x bazel-0.10.0-without-jdk-installer-linux-x86_64.sh && \
-    ./bazel-0.10.0-without-jdk-installer-linux-x86_64.sh
-
-# clone tensorflow from github
-RUN git clone https://github.com/tensorflow/tensorflow && \
-    cd tensorflow && \
-    git checkout r1.9
 
 COPY nbconfig3.py /root/.jupyter/jupyter_notebook_config.py
 
